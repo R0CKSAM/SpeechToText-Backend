@@ -1,0 +1,28 @@
+# === NODE ===
+server/node_modules/
+
+# === ENV & Credentials ===
+.env
+server/.env
+
+# === BUILD ARTIFACTS ===
+server/uploads/
+
+# === LOGS ===
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# === SYSTEM FILES ===
+.DS_Store
+Thumbs.db
+
+# === IDES & TOOLS ===
+.vscode/
+.idea/
+*.swp
+
+# Ignore Google Cloud credentials
+server/google-credentials.json
+
