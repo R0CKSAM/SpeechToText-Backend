@@ -1,11 +1,11 @@
 {
-  "appName": "TexttoSpeechBackend",
+  "appName": "SpeechToText-Backend",
   "version": "1.0.0",
   "description": "Backend server for the voice transcription app using Node.js, Express, Google Speech-to-Text API, and Supabase.",
   "maintainer": {
     "name": "Smarth Sarin",
     "email": "smarthsarin@gmail.com",
-    "github": "https://github.com/Smarthsarin"
+    "github": "https://github.com/R0CKSAM/SpeechToText-Backend"
   },
   "environments": {
     "development": {
@@ -13,8 +13,8 @@
       "frontendUrl": "http://localhost:5173"
     },
     "production": {
-      "apiBaseUrl": "https://texttospeechbackend-1.onrender.com",
-      "frontendUrl": "https://text-to-speech-frontend-beta.vercel.app"
+      "apiBaseUrl": " https://speechtotext-backend-d6ok.onrender.com",
+      "frontendUrl": " https://speech-to-text-frontend-ashen.vercel.app"
     }
   },
   "features": [

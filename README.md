@@ -1,6 +1,6 @@
-# TexttoSpeech Backend
+# SpeechToText-Backend
 
-This is the **backend server** for the **TexttoSpeechBackend** application, built with Node.js and Express. It handles audio file uploads, integrates with Google Cloud's Speech-to-Text API for transcription, and stores results in Supabase. Authentication and user management are also powered by Supabase.
+This is the **backend server** for the **SpeechToText** application, built with Node.js and Express. It handles audio file uploads, integrates with Google Cloud's Speech-to-Text API for transcription, and stores results in Supabase. Authentication and user management are also powered by Supabase.
 
 
 ## Features

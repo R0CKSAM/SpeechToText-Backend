@@ -1,7 +1,7 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "TexttoSpeechBackend project",
+  "description": "SpeechToText-Backend project",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
