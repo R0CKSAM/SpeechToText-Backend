@@ -1,4 +1,4 @@
-// index.js (updated)
+// index.js (final)
 
 require("dotenv").config();
 const express = require("express");
@@ -12,8 +12,7 @@ const { createClient } = require("@supabase/supabase-js");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-/* -------------------- CORS (FIXED) -------------------- */
-// 🔧 Use a function so cors echoes Access-Control-Allow-Origin for whitelisted sites
+/* -------------------- CORS -------------------- */
 const allowedOrigins = new Set([
   "http://localhost:5173",
   "https://speech-to-text-frontend-ashen.vercel.app",
@@ -21,29 +20,31 @@ const allowedOrigins = new Set([
 
 const corsOptions = (req, cb) => {
   const origin = req.header("Origin");
-
-  // Base options used for all requests
   const base = {
     credentials: true,
     methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    maxAge: 86400, // cache preflight for a day
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"], // 👈 added XRQ
+    maxAge: 86400,
   };
-
-  // Allow server-to-server (no Origin header)
-  if (!origin) return cb(null, { ...base, origin: true });
-
-  // Only allow exact matches from our list
-  const isAllowed = allowedOrigins.has(origin);
-  return cb(null, { ...base, origin: isAllowed });
+  if (!origin) return cb(null, { ...base, origin: true }); // server-to-server
+  return cb(null, { ...base, origin: allowedOrigins.has(origin) });
 };
 
-// Must be BEFORE any routes/multer
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // handle all preflight requests
-/* ------------------------------------------------------ */
+app.options("*", cors(corsOptions));
 
-// Parse JSON for non-multipart routes (safe to have even with multer)
+// 👇👈 added: always echo ACAO for allowed origins on every response
+app.use((req, res, next) => {
+  const origin = req.header("Origin");
+  if (origin && allowedOrigins.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Vary", "Origin");
+  }
+  next();
+});
+/* ---------------------------------------------- */
+
 app.use(express.json());
 
 // Ensure uploads folder exists
@@ -64,7 +65,7 @@ const client = new speech.SpeechClient({
   keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS || "google-credentials.json",
 });
 
-// Supabase (service_role key recommended on server)
+// Supabase
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 // Multer setup
@@ -72,7 +73,6 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
   filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
 });
-
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
@@ -112,7 +112,7 @@ app.post(
       const request = {
         audio: { content: audioBytes },
         config: {
-          encoding: "MP3", // works for .mp3; Google can auto-detect, but we keep as-is
+          encoding: "MP3",
           sampleRateHertz: 16000,
           languageCode: "en-US",
         },
@@ -121,16 +121,13 @@ app.post(
       let transcription;
       try {
         const [response] = await client.recognize(request);
-        transcription = response.results
-          .map((r) => r.alternatives[0].transcript)
-          .join("\n");
+        transcription = response.results.map(r => r.alternatives[0].transcript).join("\n");
         console.log("Transcription result:", transcription);
       } catch (apiErr) {
         console.error("Google API Error:", apiErr);
         return res.status(500).json({ error: "Speech-to-Text failed" });
       } finally {
-        // cleanup uploaded file
-        fs.unlink(filePath, () => {});
+        fs.unlink(filePath, () => {}); // clean temp file
       }
 
       if (!transcription) return res.status(500).json({ error: "No speech detected" });
@@ -154,8 +151,9 @@ app.post(
   }
 );
 
-// Fetch previous transcriptions
-app.get("/transcriptions/:user_id", async (req, res) => {
+// History route
+// 👇👈 added cors() here so the ACAO header is guaranteed on this GET
+app.get("/transcriptions/:user_id", cors(corsOptions), async (req, res) => {
   const { user_id } = req.params;
   const { data, error } = await supabase
     .from("audio_files")
